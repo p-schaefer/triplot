@@ -174,7 +174,7 @@ aspect_importance.default <- function(x, data,
   new_X <- get_sample(N, length(variable_groups), sample_method, f)
   new_observation_samp<-sample(1:nrow(new_observation),
                                nrow(n_sample),
-                               replace=nrow(n_sample)>row(new_observation)
+                               replace=nrow(n_sample)>nrow(new_observation)
                               )
 
   for (i in seq_len(nrow(n_sample))) {
