@@ -176,7 +176,7 @@ aspect_importance.default <- function(x, data,
 
   for (i in seq_len(nrow(n_sample))) {
     vars <- unlist(variable_groups[new_X[i, ] == 1])
-    n_sample_changed[i, vars] <- new_observation[vars][sample(seq_along(1:length(new_observation[vars])))]
+    n_sample_changed[i, vars] <- new_observation[vars][sample(1:length(new_observation[vars]),1)]
   }
 
   # calculate change in predictions -----------------------------------------
