@@ -214,7 +214,7 @@ aspect_importance.default <- function(x, data,
     res$features[i] <- variable_groups[as.character(res[i, 1])]
     vars <- unlist(res$features[i])
     if (all(sapply(data[, vars], is.numeric)) & length(vars) > 1) {
-      cor_matrix <- cor(data[, vars], method = "spearman")
+      cor_matrix <- cor(data[, vars], method = "spearman",use="pairwise.complete.obs")
       res$min_cor[i] <- min(abs(cor_matrix))
       res$sign[i] <- ifelse(max(cor_matrix) > 0 & min(cor_matrix) < 0,
                             "neg", "pos")
