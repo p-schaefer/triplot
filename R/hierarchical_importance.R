@@ -80,7 +80,7 @@ hierarchical_importance <- function(x, data, y = NULL,
   
   # Building helper objects ---------------------------------------------
   
-  x_hc <- hclust(as.dist(1 - abs(cor(data, method = cor_method))),
+  x_hc <- hclust(as.dist(1 - abs(cor(data, method = cor_method, use = "pairwise.complete.obs"))),
                  method = clust_method)
   cutting_heights <- x_hc$height
   aspects_list_previous <-  list_variables(x_hc, 1)
