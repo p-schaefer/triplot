@@ -35,7 +35,7 @@ cluster_variables.default <- function(x, clust_method = "complete",
 
 # build clustering tree ---------------------------------------------------
 
-  x_hc <- hclust(as.dist(1 - abs(cor(x, method = cor_method))),
+  x_hc <- hclust(as.dist(1 - abs(cor(x, method = cor_method,use="pairwise.complete.obs"))),
                  method = clust_method)
 
   class(x_hc) <- c("cluster_variables", "hclust")
