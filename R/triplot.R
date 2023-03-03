@@ -76,6 +76,8 @@ calculate_triplot.explainer <- function(x,
                                           c("raw", "ratio", "difference"),
                                         clust_method = "complete",
                                         cor_method = "spearman",
+                                        sample_method = "default",
+                                        f = 2,
                                         ...) {
   
   type <- match.arg(type)
@@ -113,7 +115,9 @@ calculate_triplot.explainer <- function(x,
                             fi_type = fi_type,
                             clust_method = clust_method,
                             cor_method = cor_method,
-                            label = label)
+                            label = label,
+                            sample_method = "default",
+                            f = 2)
 }
 
 #' @export
@@ -131,6 +135,8 @@ calculate_triplot.default <- function(x, data, y = NULL,
                                       fi_type = c("raw", "ratio", "difference"),
                                       clust_method = "complete",
                                       cor_method = "spearman",
+                                      sample_method = "default",
+                                      f = 2,
                                       ...) {
   
   type <- match.arg(type)
