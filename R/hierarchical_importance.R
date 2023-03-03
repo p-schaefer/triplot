@@ -69,6 +69,8 @@ hierarchical_importance <- function(x, data, y = NULL,
                                     fi_type = c("raw", "ratio", "difference"),
                                     clust_method = "complete",
                                     cor_method = "spearman",
+                                    sample_method = "default",
+                                    f = 2,
                                     ...) {
   
   if (all(type != "predict", is.null(y))) {
@@ -83,7 +85,10 @@ hierarchical_importance <- function(x, data, y = NULL,
   x_hc <- hclust(as.dist(1 - abs(cor(data, method = cor_method, use = "pairwise.complete.obs"))),
                  method = clust_method)
   cutting_heights <- x_hc$height
-  aspects_list_previous <-  list_variables(x_hc, 1)
+  cutting_heights<-unique(cutting_heights)
+  cutting_heights[cutting_heights==0]<-.Machine$double.eps
+  cutting_heights[cutting_heights==1]<-1-.Machine$double.eps
+  aspects_list_previous <- list_variables(x_hc, 1)
   int_node_importance <- as.data.frame(NULL)
   
   # Calculating aspect importance -------------------------------------------
@@ -94,36 +99,47 @@ hierarchical_importance <- function(x, data, y = NULL,
     
     t1 <- match(aspects_list_current, setdiff(aspects_list_current,
                                               aspects_list_previous))
-    t2 <- which(t1 == 1)
-    t3 <- aspects_list_current[t2]
-    group_name <- names(t3)
     
-    if (type != "predict") {
-      explainer <- explain(model = x, data = data, y = y,
-                           predict_function = predict_function,
-                           verbose = FALSE)
-      res_ai <- feature_importance(explainer = explainer,
-                                   variable_groups = aspects_list_current,
-                                   N = N,
-                                   loss_function = loss_function,
-                                   B = B,
-                                   type = fi_type)
-      res_ai <- res_ai[res_ai$permutation == "0", ]
+    t2<-t1[!is.na(t1)]
+    
+    for (tt2 in t2) {
+      new_row<-nrow(int_node_importance)+1
+      t3 <- aspects_list_current[tt2]
+      group_name <- names(t3)
       
-      int_node_importance[i, 1] <-
-        res_ai[res_ai$variable == group_name, ]$dropout_loss
-    } else {
-      res_ai <- aspect_importance(x = x, data = data,
-                                  predict_function = predict_function,
-                                  new_observation = new_observation,
-                                  variable_groups = aspects_list_current, N = N)
-      int_node_importance[i, 1] <-
-        res_ai[res_ai$variable_groups == group_name, ]$importance
+      if (type != "predict") {
+        explainer <- explain(model = x, data = data, y = y,
+                             predict_function = predict_function,
+                             verbose = FALSE)
+        res_ai <- feature_importance(explainer = explainer,
+                                     variable_groups = aspects_list_current,
+                                     N = N,
+                                     loss_function = loss_function,
+                                     B = B,
+                                     type = fi_type)
+        res_ai <- res_ai[res_ai$permutation == "0", ]
+        
+        int_node_importance[new_row, 1] <-
+          res_ai[res_ai$variable == group_name, ]$dropout_loss
+      } else {
+        res_ai <- aspect_importance(x = x, 
+                                    data = data,
+                                    predict_function = predict_function,
+                                    new_observation = new_observation,
+                                    variable_groups = aspects_list_current, 
+                                    N = N,
+                                    f=f)
+        int_node_importance[new_row, 1] <-
+          res_ai[res_ai$variable_groups == group_name, ]$importance
+      }
+      
+      int_node_importance[new_row, 2] <- group_name
+      int_node_importance[new_row, 3] <- cutting_heights[i]
+      aspects_list_previous <- aspects_list_current
+      
     }
     
-    int_node_importance[i, 2] <- group_name
-    int_node_importance[i, 3] <- cutting_heights[i]
-    aspects_list_previous <- aspects_list_current
+    # t2 <- which(t1 == 1)
   }
 
   if (type != "predict") {
@@ -136,15 +152,15 @@ hierarchical_importance <- function(x, data, y = NULL,
     baseline_val <-
       res[res$variable == "aspect.group1", ]$dropout_loss
     
-    int_node_importance[length(cutting_heights), 1] <- baseline_val
+    int_node_importance[length(x_hc$height), 1] <- baseline_val
   } else {
-    int_node_importance[length(cutting_heights), 1] <- NA
+    int_node_importance[length(x_hc$height), 1] <- NA
   }
     
 
   
   # Inserting importance values into x_hc tree ------------------------------
-  
+
   x_hc$height <- int_node_importance$V1
   hi <- list(x_hc, type, new_observation)
   class(hi) <- c("hierarchical_importance")
@@ -162,7 +178,6 @@ plot.hierarchical_importance <- function(x,
                                          add_last_group = TRUE,
                                          axis_lab_size = 10,
                                          text_size = 3, ...) {
-  
   stopifnot("hierarchical_importance" %in% class(x))
   
   x_hc <- x[[1]]
